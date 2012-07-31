@@ -1,0 +1,80 @@
+<!DOCTYPE html>
+<html>
+<head>
+	<title>Flippin' grid example</title>
+	<style>
+	body { background: black; }
+	.tile:nth-child(4n+1), .tile:nth-child(4n+2) { background-color: white; }
+	.tile:nth-child(4n+0), .tile:nth-child(4n+3) { background-color: silver; }
+	</style>
+	<script src="grid.js"></script>
+</head>
+<body>
+<script>
+// Set up a grid.
+var grid = new Grid(8, 8, 100);
+document.body.appendChild(grid.node);
+
+// This function adds image URLs to an array.
+var images = [];
+function push(data) {
+  for (var i = 0, len = data.items.length; i < len; i++) {
+    // Pre-load the image so that we don't see the image loading while it's
+    // flipping.
+    var img = new Image();
+    img.src = data.items[i].media.m;
+    img.onload = function () {
+      // The image has been pre-loaded, so add it now.
+      images.push(this.src);
+    };
+  }
+}
+
+// This function sets one tile to an image then goes on to the next tile.
+var x = 0, y = 0, i = 0, size = 1;
+function next() {
+  if (!images.length) return;
+
+  // Flip the next image onto the grid.
+  grid.flip(x, y, size, size, images[i]);
+
+  // Increment coordinates to the next tile.
+  x += size;
+  if (x >= grid.cols) {
+    x = 0;
+    y += size;
+    if (y >= grid.rows) {
+      y = 0;
+      size *= 2;
+      // Temporarily clear the interval before starting the next round.
+      clearInterval(interval);
+      // Restart the interval after a certain amount of time.
+      setTimeout(function () {
+        interval = setInterval(next, 300);
+      }, 2000);
+      // If the size is too big for the grid, reset it.
+      if (size > grid.cols || size > grid.rows) {
+        setTimeout(function () {
+          grid.flip(0, 0, grid.cols, grid.rows);
+          size = 1;
+        }, 1000);
+      }
+    }
+  }
+
+  if (++i == images.length) i = 0;
+}
+
+// Repeat the above function indefinitely.
+var interval = setInterval(next, 300);
+</script>
+
+<!-- Load a bunch of random images from Flickr -->
+<script async src="http://api.flickr.com/services/feeds/photos_public.gne?tags=cat&format=json&jsoncallback=push"></script>
+<script async src="http://api.flickr.com/services/feeds/photos_public.gne?tags=insect&format=json&jsoncallback=push"></script>
+<script async src="http://api.flickr.com/services/feeds/photos_public.gne?tags=dog&format=json&jsoncallback=push"></script>
+<script async src="http://api.flickr.com/services/feeds/photos_public.gne?tags=bird&format=json&jsoncallback=push"></script>
+<script async src="http://api.flickr.com/services/feeds/photos_public.gne?tags=flower&format=json&jsoncallback=push"></script>
+
+</body>
+</html>
